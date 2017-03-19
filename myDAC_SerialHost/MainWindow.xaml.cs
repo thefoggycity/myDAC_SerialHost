@@ -24,5 +24,15 @@ namespace myDAC_SerialHost
         {
             InitializeComponent();
         }
+
+        private void btnConn_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void btnApply_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }
