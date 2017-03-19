@@ -47,6 +47,7 @@ namespace myDAC_SerialHost
             IsSending = false;
             cmbPortSel.ItemsSource = SerialPort.GetPortNames();
             optSqr.IsChecked = true;
+            this.Closed += new EventHandler(window_Closed);
 
             // Init Parameters
             IsConnected = false;
@@ -78,6 +79,7 @@ namespace myDAC_SerialHost
             }
             else
             {
+                if (IsSending) thrSend.Abort();
                 spBoard.Close();
                 spBoard.Dispose();
                 spBoard = null;
@@ -175,9 +177,36 @@ namespace myDAC_SerialHost
         {
             if (wfMode == WaveForm.Wav)
             {
-                // TODO: READ FROM FILE
-                // DUMMY CODE BELOW
-                SignalData = new byte[] { 0xff, 0x00 };
+                const uint ActualSampleRate = 11520;
+                WaveReader wr;
+                try
+                {
+                    wr = new WaveReader(WavFile);
+                }
+                catch
+                {
+                    return false;
+                }
+                if (!wr.IsWave) return false;
+
+                int TotalFrame = wr.GetTotalFrame();
+                uint FileSampleRate = wr.GetInfo().SampleRate;
+                Single SampleRateRatio = (Single)FileSampleRate / (Single)ActualSampleRate;
+                SignalData = new byte[(int)(TotalFrame / SampleRateRatio + 1)];
+                
+                byte[] CurrentSample;
+                Single FrameIndex = 0.0F;
+                int i = 0;
+                do
+                {
+                    CurrentSample = wr.GetSampleAt(Convert.ToInt32(FrameIndex));
+                    SignalData[i] = (byte)(CurrentSample[CurrentSample.Count() - 1] ^ (byte)0x80);
+                    FrameIndex += SampleRateRatio;
+                    i++;
+                } while (FrameIndex < TotalFrame);
+
+                wr.Close();
+
                 return true;
             }
             else
@@ -212,6 +241,16 @@ namespace myDAC_SerialHost
                     }
                 }
                 return true;
+            }
+        }
+
+        private void window_Closed(object sender, EventArgs e)
+        {
+            if (IsSending) thrSend.Abort();
+            if (IsConnected)
+            {
+                spBoard.Close();
+                spBoard.Dispose();
             }
         }
     }
