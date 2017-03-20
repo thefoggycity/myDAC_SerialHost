@@ -177,7 +177,7 @@ namespace myDAC_SerialHost
         {
             if (wfMode == WaveForm.Wav)
             {
-                const uint ActualSampleRate = 11520;
+                const uint ActualSampleRate = 11540;
                 WaveReader wr;
                 try
                 {
@@ -242,6 +242,16 @@ namespace myDAC_SerialHost
                 }
                 return true;
             }
+        }
+
+        private void txtSamp_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            uint Length;
+            if (lblFreq == null) return;
+            if (!uint.TryParse(txtSamp.Text, out Length) || Length == 0F)
+                lblFreq.Content = "[Invaild Length]";
+            else
+                lblFreq.Content = String.Format("Wave @ {0:F1} Hz", 11540F / (float)Length);
         }
 
         private void window_Closed(object sender, EventArgs e)

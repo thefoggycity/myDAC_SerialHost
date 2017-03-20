@@ -53,8 +53,10 @@
             </StackPanel>
             <StackPanel x:Name="stkLen" Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center">
                 <Label Margin="5">Wave Length</Label>
-                <TextBox x:Name="txtSamp" Margin="5,5,0,5" VerticalContentAlignment="Center" Width="200">20</TextBox>
+                <TextBox x:Name="txtSamp" Margin="5,5,0,5" VerticalContentAlignment="Center" 
+                         TextChanged="txtSamp_TextChanged" Width="200">100</TextBox>
                 <Label Margin="0,5,5,5">Samples</Label>
+                <Label x:Name="lblFreq" Margin="5">Wave @ 115.4 Hz</Label>
             </StackPanel>
         </Grid>
 
