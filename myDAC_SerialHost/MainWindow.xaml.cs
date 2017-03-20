@@ -24,6 +24,10 @@ namespace myDAC_SerialHost
     /// </summary>
     public partial class MainWindow : Window
     {
+        const int BAUDRATE = 115400;
+        const Parity PORTPARITY = Parity.None;
+        const int PORTDATABITS = 8;
+        const StopBits PORTSTOPBITS = StopBits.One;
 
         private bool IsConnected, IsSending;
         SerialPort spBoard;
@@ -62,7 +66,8 @@ namespace myDAC_SerialHost
         {
             if (!IsConnected)
             {
-                spBoard = new SerialPort(cmbPortSel.SelectedValue.ToString(), 115200, Parity.None, 8, StopBits.One);
+                spBoard = new SerialPort(cmbPortSel.SelectedValue.ToString(), 
+                                BAUDRATE, PORTPARITY, PORTDATABITS, PORTSTOPBITS);
                 try
                 {
                     spBoard.Open();
@@ -105,10 +110,10 @@ namespace myDAC_SerialHost
                 Updated = UpdateData();      // Detect whether input has error
                 IsSending = true;
                 thrSend.Start();
-                lblStatus.Content = Updated ? ( (wfMode == WaveForm.Wav) ?
+                lblStatus.Content = Updated ? ((wfMode == WaveForm.Wav) ?
                                     String.Format("Waveform updated to wave file {0:s}", WavFile.Name) : // WavFile will not be null if reach here
                                     String.Format("Waveform updated to {0:s} [{1:s},{2:s},{3:s}].",
-                                    wfMode.ToString(), txtGrov.Text, txtPeak.Text, txtSamp.Text) ) :
+                                    wfMode.ToString(), txtGrov.Text, txtPeak.Text, txtSamp.Text)) :
                                     "Invaild waveform coefficients.";
             }
             catch
@@ -116,7 +121,7 @@ namespace myDAC_SerialHost
                 lblStatus.Content = "Fail to update wave";
                 IsSending = (thrSend == null) ? false : thrSend.IsAlive;
             }
-        }
+}
 
         private void optSqrSawTriSin_Checked(object sender, RoutedEventArgs e)
         {
@@ -177,7 +182,7 @@ namespace myDAC_SerialHost
         {
             if (wfMode == WaveForm.Wav)
             {
-                const uint ActualSampleRate = 11540;
+                const uint ActualSampleRate = BAUDRATE / 10;
                 WaveReader wr;
                 try
                 {
@@ -191,11 +196,11 @@ namespace myDAC_SerialHost
 
                 int TotalFrame = wr.GetTotalFrame();
                 uint FileSampleRate = wr.GetInfo().SampleRate;
-                Single SampleRateRatio = (Single)FileSampleRate / (Single)ActualSampleRate;
-                SignalData = new byte[(int)(TotalFrame / SampleRateRatio + 1)];
+                double SampleRateRatio = (double)FileSampleRate / ActualSampleRate;
+                SignalData = new byte[(int)Math.Ceiling(TotalFrame / SampleRateRatio + 1)];
                 
                 byte[] CurrentSample;
-                Single FrameIndex = 0.0F;
+                double FrameIndex = 0.0;    // float cannot provide needed precision
                 int i = 0;
                 do
                 {
@@ -251,7 +256,7 @@ namespace myDAC_SerialHost
             if (!uint.TryParse(txtSamp.Text, out Length) || Length == 0F)
                 lblFreq.Content = "[Invaild Length]";
             else
-                lblFreq.Content = String.Format("Wave @ {0:F1} Hz", 11540F / (float)Length);
+                lblFreq.Content = String.Format("Wave @ {0:F1} Hz", (float)BAUDRATE / 10 / Length);
         }
 
         private void window_Closed(object sender, EventArgs e)

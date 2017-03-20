@@ -166,6 +166,7 @@ namespace myDAC_SerialHost
                 WaveStream.Seek(-3, SeekOrigin.Current);
             }
             while (!ByteArrayCompare(ReadWindow, DATA));
+            WaveStream.Seek(3, SeekOrigin.Current);
             WaveStream.Read(ReadWindow, 0, 4);
             WaveInfo.DataLength = (uint)(ReadWindow[0] + 0x100 * ReadWindow[1] +
                                     0x10000 * ReadWindow[2] + 0x1000000 * ReadWindow[3]);
