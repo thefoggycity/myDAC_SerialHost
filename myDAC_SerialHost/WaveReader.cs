@@ -109,7 +109,7 @@ namespace myDAC_SerialHost
             WaveStream.Dispose();
         }
 
-        // WARNING: THE FILE WILL NOT BE ANALYSED CORRECTLY IF FOURCCS ARE NOT AT 4K POSITIONS
+        // WARNING: THE FILE WILL NOT BE ANALYSED CORRECTLY IF FOURCCS ARE NOT AT 4N POSITIONS
         private void AnalyseFile()
         {
             byte[] RIFF = { 0x52, 0x49, 0x46, 0x46 };
@@ -137,6 +137,7 @@ namespace myDAC_SerialHost
             }
             IsWave = true;
 
+            // It is not likely that "fmt_" is not at 4n position.
             do WaveStream.Read(ReadWindow, 0, 4);
             while (!ByteArrayCompare(ReadWindow, FMT_));
             WaveStream.Seek(4, SeekOrigin.Current);     // Skip the fmtSize
@@ -158,7 +159,12 @@ namespace myDAC_SerialHost
             WaveInfo.BlockAlign = (ushort)(ReadWindow[0] + 0x100 * ReadWindow[1]);
             WaveInfo.BitPerSample = (ushort)(ReadWindow[2] + 0x100 * ReadWindow[3]);
 
-            do WaveStream.Read(ReadWindow, 0, 4);
+            // It is highly possible that "DATA" is not at 4n position, thus check each position.
+            do
+            {
+                WaveStream.Read(ReadWindow, 0, 4);
+                WaveStream.Seek(-3, SeekOrigin.Current);
+            }
             while (!ByteArrayCompare(ReadWindow, DATA));
             WaveStream.Read(ReadWindow, 0, 4);
             WaveInfo.DataLength = (uint)(ReadWindow[0] + 0x100 * ReadWindow[1] +
